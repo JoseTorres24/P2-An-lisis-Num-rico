@@ -1,1 +1,3 @@
-# P2-An-lisis-Num-rico
+# P2-Analisisnumrico
+Desarrollo en sympy
+pip install sympy
