@@ -1,7 +1,7 @@
 import sympy as sp
 from sympy.parsing.sympy_parser import (parse_expr, standard_transformations, implicit_multiplication_application, convert_xor)
 
-def newton_raphson(func_expr, initial_guess, tol=1e-6, max_iter=100):
+def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
     try:
         # Definir la variable simbólica
         x = sp.symbols('x')
@@ -26,7 +26,7 @@ def newton_raphson(func_expr, initial_guess, tol=1e-6, max_iter=100):
 
         # Iteración inicial
         current_guess = initial_guess
-        for i in range(max_iter):
+        for i in range(1, max_iter+1):  # Iteraciones desde 1 hasta max_iter
             # Evaluar la función y su derivada en el valor actual
             f_value = f_lambdified(current_guess)
             f_prime_value = f_prime_lambdified(current_guess)
@@ -39,9 +39,17 @@ def newton_raphson(func_expr, initial_guess, tol=1e-6, max_iter=100):
             # Calcular la próxima aproximación
             next_guess = current_guess - f_value / f_prime_value
 
-            # Comprobar la tolerancia (criterio de convergencia)
-            if abs(next_guess - current_guess) < tol:
-                print(f"Raíz encontrada: {next_guess} después de {i+1} iteraciones.")
+            # Calcular el error aproximado
+            error = abs(next_guess - current_guess)
+
+            # Imprimir el estado actual de la iteración
+            print(f"Iteración {i}: Valor aproximado = {next_guess}, Error aproximado = {error}")
+
+            # Comprobar si el error es menor que la tolerancia (criterio de convergencia)
+            if error < tol:
+                print(f"\nRaíz encontrada: {next_guess}")
+                print(f"Error aproximado: {error}")
+                print(f"Iteraciones totales: {i}")
                 return next_guess
 
             # Actualizar el valor de la aproximación
