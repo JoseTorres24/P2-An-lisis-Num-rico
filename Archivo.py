@@ -1,12 +1,25 @@
 import sympy as sp
+from sympy.parsing.sympy_parser import (parse_expr, standard_transformations, implicit_multiplication_application, convert_xor)
 
 def newton_raphson(func_expr, initial_guess, tol=1e-6, max_iter=100):
     try:
-        # Definir la variable simbólica y la función
+        # Definir la variable simbólica
         x = sp.symbols('x')
-        f = sp.sympify(func_expr)  # Convertir la expresión a una función simbólica
+        
+        # Habilitar transformaciones para multiplicación implícita y ^ como operador de potencia
+        transformations = (standard_transformations + (implicit_multiplication_application, convert_xor,))
+        
+        # Definir la constante e (número de Euler)
+        local_dict = {'e': sp.E}
+        
+        # Convertir la expresión ingresada a una función simbólica, con multiplicación implícita y ^ como potencia
+        f = parse_expr(func_expr, transformations=transformations, local_dict=local_dict)
         f_prime = sp.diff(f, x)  # Derivada de la función
 
+        # Mostrar la función y su derivada
+        print(f"Función: {f}")
+        print(f"Derivada: {f_prime}")
+        
         # Convertir las funciones simbólicas en funciones evaluables numéricamente
         f_lambdified = sp.lambdify(x, f)
         f_prime_lambdified = sp.lambdify(x, f_prime)
