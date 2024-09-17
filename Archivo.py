@@ -38,7 +38,7 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
 
             # Evitar división por cero en caso de que la derivada sea 0
             if f_prime_value == 0:
-                output_text.insert(tk.END, "Derivada es cero. El método no puede continuar.\n", 'bold')
+                output_text.insert(tk.END, "Derivada es cero. El método no puede continuar.\n", 'error')
                 return None
 
             # Calcular la próxima aproximación
@@ -61,7 +61,7 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
             current_guess = next_guess
 
         # Si el número máximo de iteraciones se alcanza sin convergencia
-        output_text.insert(tk.END, "El método no converge después del número máximo de iteraciones.\n", 'bold')
+        output_text.insert(tk.END, "El método no converge después del número máximo de iteraciones.\n", 'error')
         return None
 
     except Exception as e:
@@ -70,6 +70,7 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
 
 # Función que será llamada cuando se presione el botón de cálculo
 def ejecutar_newton_raphson():
+    output_text.config(state=tk.NORMAL)  # Habilitar el área de texto temporalmente para escribir los resultados
     output_text.delete(1.0, tk.END)  # Limpiar el área de salida antes de mostrar resultados
     funcion = entrada_funcion.get()  # Obtener la función de la entrada
     try:
@@ -77,40 +78,58 @@ def ejecutar_newton_raphson():
         newton_raphson(funcion, valor_inicial)  # Ejecutar el método de Newton-Raphson
     except ValueError:
         messagebox.showerror("Error", "El valor inicial debe ser un número válido.")
+    output_text.config(state=tk.DISABLED)  # Deshabilitar el área de texto para que no sea editable
 
 # Función para limpiar el área de texto
 def limpiar_pantalla():
+    output_text.config(state=tk.NORMAL)  # Habilitar el área de texto temporalmente para poder limpiarla
     output_text.delete(1.0, tk.END)
+    output_text.config(state=tk.DISABLED)  # Deshabilitar de nuevo el área de texto para que no sea editable
+
+# Función para centrar la ventana en la pantalla
+def centrar_ventana(ventana, width, height):
+    screen_width = ventana.winfo_screenwidth()
+    screen_height = ventana.winfo_screenheight()
+    pos_x = (screen_width // 2) - (width // 2)
+    pos_y = (screen_height // 2) - (height // 2)
+    ventana.geometry(f"{width}x{height}+{pos_x}+{pos_y}")
 
 # Configuración de la interfaz gráfica
 ventana = tk.Tk()
 ventana.title("Método de Newton-Raphson")
+ventana.state('zoomed')  # Ajustar la ventana para que ocupe toda la pantalla
+centrar_ventana(ventana, 800, 500)  # Centrar la ventana en la pantalla (tamaño por defecto)
+
+# Estilos y fuentes
+fuente_entradas = font.Font(family="Helvetica", size=12)
+fuente_boton = font.Font(family="Helvetica", size=10, weight="bold")
+fuente_negrita = font.Font(family="Helvetica", size=12, weight="bold")
 
 # Etiquetas y campos de entrada
-tk.Label(ventana, text="Introduce la función f(x):").grid(row=0, column=0, padx=10, pady=10)
-entrada_funcion = tk.Entry(ventana, width=40)
+tk.Label(ventana, text="Introduce la función f(x):", font=fuente_entradas).grid(row=0, column=0, padx=10, pady=10, sticky="e")
+entrada_funcion = tk.Entry(ventana, width=40, font=fuente_entradas)
 entrada_funcion.grid(row=0, column=1, padx=10, pady=10)
 
-tk.Label(ventana, text="Introduce el valor inicial:").grid(row=1, column=0, padx=10, pady=10)
-entrada_inicial = tk.Entry(ventana, width=20)
+tk.Label(ventana, text="Introduce el valor inicial:", font=fuente_entradas).grid(row=1, column=0, padx=10, pady=10, sticky="e")
+entrada_inicial = tk.Entry(ventana, width=20, font=fuente_entradas)
 entrada_inicial.grid(row=1, column=1, padx=10, pady=10)
 
 # Botón para ejecutar el método
-boton_calcular = tk.Button(ventana, text="Calcular", command=ejecutar_newton_raphson)
-boton_calcular.grid(row=2, column=0, padx=10, pady=10)
+boton_calcular = tk.Button(ventana, text="Calcular", command=ejecutar_newton_raphson, bg="#4CAF50", fg="white", font=fuente_boton)
+boton_calcular.grid(row=2, column=0, padx=10, pady=10, sticky="e")
 
 # Botón para limpiar el área de texto
-boton_limpiar = tk.Button(ventana, text="Limpiar", command=limpiar_pantalla)
-boton_limpiar.grid(row=2, column=1, padx=10, pady=10)
+boton_limpiar = tk.Button(ventana, text="Limpiar", command=limpiar_pantalla, bg="#F44336", fg="white", font=fuente_boton)
+boton_limpiar.grid(row=2, column=1, padx=10, pady=10, sticky="w")
 
 # Área de texto desplazable para mostrar el resultado
-output_text = scrolledtext.ScrolledText(ventana, width=100, height=40)
+output_text = scrolledtext.ScrolledText(ventana, width=80, height=20, font=fuente_entradas)
 output_text.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+output_text.config(state=tk.DISABLED)  # Deshabilitar el área de texto para que no sea editable
 
 # Definir un estilo de fuente negrita y más grande para las iteraciones
-font_bold = font.Font(output_text, output_text.cget("font"))
-font_bold.configure(weight="bold", size=10)
-output_text.tag_configure("bold", font=font_bold)
+output_text.tag_configure("bold", font=fuente_negrita)
+output_text.tag_configure("error", foreground="red")
 
 # Ejecutar la ventana
 ventana.mainloop()
