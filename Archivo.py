@@ -1,6 +1,10 @@
 import sympy as sp
 from sympy.parsing.sympy_parser import (parse_expr, standard_transformations, implicit_multiplication_application, convert_xor)
+import tkinter as tk
+from tkinter import messagebox, scrolledtext
+from tkinter import font
 
+# Función del método de Newton-Raphson
 def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
     try:
         # Definir la variable simbólica
@@ -15,17 +19,18 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
         # Convertir la expresión ingresada a una función simbólica, con multiplicación implícita y ^ como potencia
         f = parse_expr(func_expr, transformations=transformations, local_dict=local_dict)
         f_prime = sp.diff(f, x)  # Derivada de la función
-
-        # Mostrar la función y su derivada
-        print(f"Función: {f}")
-        print(f"Derivada: {f_prime}")
         
         # Convertir las funciones simbólicas en funciones evaluables numéricamente
         f_lambdified = sp.lambdify(x, f)
         f_prime_lambdified = sp.lambdify(x, f_prime)
-
+        
         # Iteración inicial
         current_guess = initial_guess
+        
+        # Mostrar la función y la derivada con formato en negritas y tamaño grande
+        output_text.insert(tk.END, f"Función: {f}\n", 'bold')
+        output_text.insert(tk.END, f"Derivada: {f_prime}\n", 'bold')
+        
         for i in range(1, max_iter+1):  # Iteraciones desde 1 hasta max_iter
             # Evaluar la función y su derivada en el valor actual
             f_value = f_lambdified(current_guess)
@@ -33,7 +38,7 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
 
             # Evitar división por cero en caso de que la derivada sea 0
             if f_prime_value == 0:
-                print("Derivada es cero. El método no puede continuar.")
+                output_text.insert(tk.END, "Derivada es cero. El método no puede continuar.\n", 'bold')
                 return None
 
             # Calcular la próxima aproximación
@@ -42,28 +47,70 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
             # Calcular el error aproximado
             error = abs(next_guess - current_guess)
 
-            # Imprimir el estado actual de la iteración
-            print(f"Iteración {i}: Valor aproximado = {next_guess}, Error aproximado = {error}")
+            # Mostrar el estado actual de la iteración
+            output_text.insert(tk.END, f"Iteración {i}: Valor aproximado = {next_guess}, Error aproximado = {error}\n", 'bold')
 
             # Comprobar si el error es menor que la tolerancia (criterio de convergencia)
             if error < tol:
-                print(f"\nRaíz encontrada: {next_guess}")
-                print(f"Error aproximado: {error}")
-                print(f"Iteraciones totales: {i}")
+                output_text.insert(tk.END, f"\nRaíz encontrada: {next_guess}\n", 'bold')
+                output_text.insert(tk.END, f"Error aproximado: {error}\n", 'bold')
+                output_text.insert(tk.END, f"Iteraciones totales: {i}\n", 'bold')
                 return next_guess
 
             # Actualizar el valor de la aproximación
             current_guess = next_guess
 
         # Si el número máximo de iteraciones se alcanza sin convergencia
-        print("El método no converge después del número máximo de iteraciones.")
+        output_text.insert(tk.END, "El método no converge después del número máximo de iteraciones.\n", 'bold')
         return None
 
     except Exception as e:
-        print(f"Error al procesar la función: {e}")
+        messagebox.showerror("Error", f"Error al procesar la función: {e}")
         return None
 
-# Ejemplo de uso con funciones trigonométricas, logarítmicas o exponenciales
-funcion = input("Introduce la función f(x) (usa sin, cos, exp, log, etc.): ")
-initial_guess = float(input("Introduce el valor inicial para la aproximación: "))
-newton_raphson(funcion, initial_guess)
+# Función que será llamada cuando se presione el botón de cálculo
+def ejecutar_newton_raphson():
+    output_text.delete(1.0, tk.END)  # Limpiar el área de salida antes de mostrar resultados
+    funcion = entrada_funcion.get()  # Obtener la función de la entrada
+    try:
+        valor_inicial = float(entrada_inicial.get())  # Obtener el valor inicial de la entrada
+        newton_raphson(funcion, valor_inicial)  # Ejecutar el método de Newton-Raphson
+    except ValueError:
+        messagebox.showerror("Error", "El valor inicial debe ser un número válido.")
+
+# Función para limpiar el área de texto
+def limpiar_pantalla():
+    output_text.delete(1.0, tk.END)
+
+# Configuración de la interfaz gráfica
+ventana = tk.Tk()
+ventana.title("Método de Newton-Raphson")
+
+# Etiquetas y campos de entrada
+tk.Label(ventana, text="Introduce la función f(x):").grid(row=0, column=0, padx=10, pady=10)
+entrada_funcion = tk.Entry(ventana, width=40)
+entrada_funcion.grid(row=0, column=1, padx=10, pady=10)
+
+tk.Label(ventana, text="Introduce el valor inicial:").grid(row=1, column=0, padx=10, pady=10)
+entrada_inicial = tk.Entry(ventana, width=20)
+entrada_inicial.grid(row=1, column=1, padx=10, pady=10)
+
+# Botón para ejecutar el método
+boton_calcular = tk.Button(ventana, text="Calcular", command=ejecutar_newton_raphson)
+boton_calcular.grid(row=2, column=0, padx=10, pady=10)
+
+# Botón para limpiar el área de texto
+boton_limpiar = tk.Button(ventana, text="Limpiar", command=limpiar_pantalla)
+boton_limpiar.grid(row=2, column=1, padx=10, pady=10)
+
+# Área de texto desplazable para mostrar el resultado
+output_text = scrolledtext.ScrolledText(ventana, width=100, height=40)
+output_text.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+# Definir un estilo de fuente negrita y más grande para las iteraciones
+font_bold = font.Font(output_text, output_text.cget("font"))
+font_bold.configure(weight="bold", size=10)
+output_text.tag_configure("bold", font=font_bold)
+
+# Ejecutar la ventana
+ventana.mainloop()
