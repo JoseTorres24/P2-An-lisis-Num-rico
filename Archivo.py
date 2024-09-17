@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, scrolledtext
 from tkinter import font
 
-# Función del método de Newton-Raphson
+# Función del método de Newton-Raphson con criterios de convergencia mejorados
 def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
     try:
         # Definir la variable simbólica
@@ -36,9 +36,9 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
             f_value = f_lambdified(current_guess)
             f_prime_value = f_prime_lambdified(current_guess)
 
-            # Evitar división por cero en caso de que la derivada sea 0
-            if f_prime_value == 0:
-                output_text.insert(tk.END, "Derivada es cero. El método no puede continuar.\n", 'error')
+            # Evitar división por cero o derivadas muy pequeñas
+            if abs(f_prime_value) < 1e-14:
+                output_text.insert(tk.END, f"Derivada es muy pequeña en x = {current_guess}. El método no puede continuar.\n", 'error')
                 return None
 
             # Calcular la próxima aproximación
@@ -48,9 +48,15 @@ def newton_raphson(func_expr, initial_guess, tol=1e-12, max_iter=1000):
             error = abs(next_guess - current_guess)
 
             # Mostrar el estado actual de la iteración
-            output_text.insert(tk.END, f"Iteración {i}: Valor aproximado = {next_guess}, Error aproximado = {error}\n", 'bold')
+            output_text.insert(tk.END, f"Iteración {i}: Valor aproximado = {next_guess}, Error aproximado = {error}, f(x) = {f_value}\n", 'bold')
 
-            # Comprobar si el error es menor que la tolerancia (criterio de convergencia)
+            # Criterio de convergencia basado en el valor de la función y el cambio en el valor de x
+            if abs(f_value) < tol:
+                output_text.insert(tk.END, f"\nRaíz encontrada: {next_guess}\n", 'bold')
+                output_text.insert(tk.END, f"f(x) ≈ 0 (con tolerancia {tol})\n", 'bold')
+                output_text.insert(tk.END, f"Iteraciones totales: {i}\n", 'bold')
+                return next_guess
+
             if error < tol:
                 output_text.insert(tk.END, f"\nRaíz encontrada: {next_guess}\n", 'bold')
                 output_text.insert(tk.END, f"Error aproximado: {error}\n", 'bold')
